@@ -11,9 +11,15 @@ import os
 from model import build_model
 
 app = Flask(__name__)
-
-# ✅ Single clean CORS setup — no @after_request conflict
-CORS(app, origins=["https://style-sense-olive.vercel.app"], supports_credentials=False)
+CORS(
+    app,
+    origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://style-sense-olive.vercel.app"
+    ],
+    supports_credentials=False
+)
 
 # ---------------- CLASS NAMES ----------------
 class_names = ["dress", "jeans", "shirt", "shoes"]

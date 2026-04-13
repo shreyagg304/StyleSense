@@ -76,7 +76,10 @@ export default function Home() {
       const formData = new FormData();
       formData.append("image", file);
 
-      const res = await fetch("https://stylesense-ti5v.onrender.com/analyze", {
+      const BASE_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+      const res = await fetch(`${BASE_URL}/analyze`, {
         method: "POST",
         body: formData,
       });
