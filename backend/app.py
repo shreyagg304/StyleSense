@@ -11,7 +11,13 @@ import os
 from model import build_model
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={
+    r"/analyze": {
+        "origins": [
+            "https://style-sense-m77z412kl-shreya-aggarwals-projects.vercel.app"
+        ]
+    }
+})
 
 # ---------------- CLASS NAMES ----------------
 # ✅ Must match alphabetical order of ImageFolder: ['dress','jeans','shirt','shoes']
