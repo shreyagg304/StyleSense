@@ -11,30 +11,28 @@ from model import build_model
 
 app = Flask(__name__)
 
-# ✅ Strong CORS (works in all cases)
+# ✅ Simple CORS (just works everywhere)
 CORS(app)
-
-# 🔥 FORCE headers (this is what actually fixes your issue)
-@app.after_request
-def after_request(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
-    response.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
-    return response
-
 
 # ---------------- CLASS NAMES ----------------
 class_names = ["dress", "jeans", "shirt", "shoes"]
 
-# ---------------- LOAD MODEL ----------------
+# ---------------- DEVICE ----------------
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-model = build_model()
-model.load_state_dict(torch.load("model.pth", map_location=device))
-model = model.to(device)
-model.eval()
+# ---------------- LAZY MODEL ----------------
+_model = None
 
-print("✅ Model loaded successfully")
+def get_model():
+    global _model
+    if _model is None:
+        print("⏳ Loading model...")
+        _model = build_model()
+        _model.load_state_dict(torch.load("model.pth", map_location=device))
+        _model = _model.to(device)
+        _model.eval()
+        print("✅ Model loaded successfully")
+    return _model
 
 # ---------------- TRANSFORM ----------------
 transform = transforms.Compose([
@@ -65,13 +63,14 @@ def detect_color(image):
     else:
         return "mixed"
 
-
 # ---------------- ROUTES ----------------
 @app.route("/analyze", methods=["POST", "OPTIONS"])
 def analyze():
-    # ✅ Handle preflight properly
+    # ✅ Handle preflight (browser CORS)
     if request.method == "OPTIONS":
         return '', 200
+
+    print("📥 Incoming request")
 
     if "image" not in request.files:
         return jsonify({"error": "No image provided"}), 400
@@ -86,6 +85,7 @@ def analyze():
         img_tensor = transform(image).unsqueeze(0).to(device)
 
         with torch.no_grad():
+            model = get_model()
             outputs = model(img_tensor)
             probs = torch.nn.functional.softmax(outputs[0], dim=0)
             confidence, predicted = torch.max(probs, 0)
@@ -100,15 +100,15 @@ def analyze():
         })
 
     except Exception as e:
+        print("❌ Error:", e)
         return jsonify({"error": str(e)}), 500
 
-
-# ---------------- HEALTH CHECK ----------------
+# ---------------- HEALTH ----------------
 @app.route("/")
 def home():
     return "✅ Backend is running"
 
-
+# ---------------- RUN ----------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=True)

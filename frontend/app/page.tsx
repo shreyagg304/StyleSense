@@ -2,7 +2,8 @@
  
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
- 
+import Chatbot from "@/components/Chatbot"; 
+
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
  
 const CATEGORY_LABEL: Record<string, string> = {
@@ -629,6 +630,9 @@ export default function Home() {
         )}
  
       </main>
+
+      <Chatbot wardrobeItems={items} />
+
     </div>
   );
 }
