@@ -6,11 +6,12 @@ from PIL import Image
 import io
 import numpy as np
 import os
-from sklearn.cluster import KMeans
 
 from model import build_model
 
 app = Flask(__name__)
+
+# ✅ Simple CORS (just works everywhere)
 CORS(app)
 
 # ---------------- CLASS NAMES ----------------
@@ -42,39 +43,17 @@ transform = transforms.Compose([
                          [0.229, 0.224, 0.225]),
 ])
 
-# ---------------- COLOR DETECTION (LIGHTWEIGHT KMEANS) ----------------
+# ---------------- COLOR DETECTION ----------------
 def detect_color(image):
     img = np.array(image)
+    avg = img.mean(axis=(0,1))
+    r, g, b = avg
 
-    # 🧠 center crop (focus on clothing)
-    h, w, _ = img.shape
-    img = img[h//4:3*h//4, w//4:3*w//4]
-
-    # 🔻 downsample heavily (IMPORTANT for memory)
-    img = img[::4, ::4]
-
-    pixels = img.reshape(-1, 3)
-
-    # 🔻 limit number of pixels
-    if len(pixels) > 1000:
-        idx = np.random.choice(len(pixels), 1000, replace=False)
-        pixels = pixels[idx]
-
-    # 🎯 lightweight KMeans
-    kmeans = KMeans(n_clusters=2, n_init=5)
-    kmeans.fit(pixels)
-
-    counts = np.bincount(kmeans.labels_)
-    dominant = kmeans.cluster_centers_[np.argmax(counts)]
-
-    r, g, b = dominant
-
-    # ---------------- COLOR CLASSIFICATION ----------------
     if r > 200 and g > 200 and b > 200:
         return "white"
     elif r < 50 and g < 50 and b < 50:
         return "black"
-    elif abs(r - g) < 20 and abs(g - b) < 20:
+    elif abs(r-g) < 25 and abs(g-b) < 25:
         return "gray"
     elif r > g and r > b:
         return "red"
@@ -82,14 +61,13 @@ def detect_color(image):
         return "green"
     elif b > r and b > g:
         return "blue"
-    elif r > 150 and g > 100:
-        return "yellow"
     else:
         return "mixed"
 
 # ---------------- ROUTES ----------------
 @app.route("/analyze", methods=["POST", "OPTIONS"])
 def analyze():
+    # ✅ Handle preflight (browser CORS)
     if request.method == "OPTIONS":
         return '', 200
 
