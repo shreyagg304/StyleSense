@@ -420,14 +420,14 @@ await fetchItems(userData.user.id);
     <div className="min-h-screen bg-stone-50 text-stone-900">
  
       {/* ── HEADER ── */}
-      <header className="sticky top-0 z-50 bg-stone-50/90 backdrop-blur-sm border-b border-stone-200 px-6 md:px-12 py-4 flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-50 bg-stone-50/90 backdrop-blur-sm border-b border-stone-200 px-6 md:px-12 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
  
         <h1 className="text-xl font-semibold tracking-widest uppercase text-stone-800">
           Style<span className="text-amber-900">.</span>Sense
         </h1>
  
         {/* Tab switcher */}
-        <div className="flex items-center bg-stone-200 rounded-full p-1 gap-1">
+        <div className="flex flex-wrap items-center justify-center md:justify-start bg-stone-200 rounded-full p-1 gap-1">
           <button
             onClick={() => setActiveTab("wardrobe")}
             className={`px-5 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all duration-200 ${
@@ -451,7 +451,7 @@ await fetchItems(userData.user.id);
         </div>
  
         {/* [NEW] Occasion selector + Generate button grouped together */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 justify-center md:justify-end">
           <button
   onClick={handleLogout}
   className="px-4 py-2 text-xs bg-red-500 hover:bg-red-600 text-white rounded-full transition"
