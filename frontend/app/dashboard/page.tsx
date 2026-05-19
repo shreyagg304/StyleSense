@@ -21,7 +21,7 @@ const CATEGORY_BG: Record<string, string> = {
   shoes: "bg-green-50",
 };
  
-const COLOR_DOT: Record<string, string> = {
+const COLOR_DOT = {
   white: "bg-white border border-gray-300",
   black: "bg-gray-900",
   gray: "bg-gray-400",
@@ -30,6 +30,8 @@ const COLOR_DOT: Record<string, string> = {
   blue: "bg-blue-500",
   yellow: "bg-yellow-400",
   purple: "bg-purple-500",
+  orange: "bg-orange-400",   // 👈 ADD THIS
+  unknown: "bg-stone-300",   // 👈 fallback
   mixed: "bg-gradient-to-br from-pink-400 via-yellow-300 to-blue-400",
 };
  
@@ -44,6 +46,7 @@ const COLOR_MATCH: Record<string, string[]> = {
   green:  ["white", "black", "yellow"],
   yellow: ["black", "blue", "green"],
   purple: ["white", "black", "gray"],
+  orange: ["black", "white", "blue"],
   mixed:  ["black", "white", "gray"],
 };
  
@@ -417,89 +420,131 @@ await fetchItems(userData.user.id);
  
   // ── RENDER ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-900">
+    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] font-sans">
  
       {/* ── HEADER ── */}
-      <header className="sticky top-0 z-50 bg-stone-50/90 backdrop-blur-sm border-b border-stone-200 px-6 md:px-12 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <header className="sticky top-0 z-50 bg-[#FAFAF8] border-b border-stone-200 px-6 md:px-12 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
  
-        <h1 className="text-xl font-semibold tracking-widest uppercase text-stone-800">
-          Style<span className="text-amber-900">.</span>Sense
-        </h1>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-[#1A1A1A] flex items-center justify-center">
+            <span className="text-white text-xs">✦</span>
+          </div>
+          <h1 className="font-heading text-lg font-bold tracking-tight text-[#1A1A1A] uppercase">
+            StyleSense
+          </h1>
+        </div>
  
         {/* Tab switcher */}
-        <div className="flex flex-wrap items-center justify-center md:justify-start bg-stone-200 rounded-full p-1 gap-1">
+        <div className="flex items-center gap-8">
           <button
             onClick={() => setActiveTab("wardrobe")}
-            className={`px-5 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all duration-200 ${
+            className={`text-xs uppercase tracking-widest font-semibold pb-1 border-b-2 transition-all duration-300 ${
               activeTab === "wardrobe"
-                ? "bg-stone-900 text-white shadow-sm"
-                : "text-stone-500 hover:text-stone-800"
+                ? "border-[#1A1A1A] text-[#1A1A1A]"
+                : "border-transparent text-stone-400 hover:text-[#1A1A1A]"
             }`}
           >
-            Wardrobe {items.length > 0 && `(${items.length})`}
+            Wardrobe {items.length > 0 && <span className="ml-1 opacity-60">({items.length})</span>}
           </button>
           <button
             onClick={() => setActiveTab("looks")}
-            className={`px-5 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all duration-200 ${
+            className={`text-xs uppercase tracking-widest font-semibold pb-1 border-b-2 transition-all duration-300 ${
               activeTab === "looks"
-                ? "bg-stone-900 text-white shadow-sm"
-                : "text-stone-500 hover:text-stone-800"
+                ? "border-[#1A1A1A] text-[#1A1A1A]"
+                : "border-transparent text-stone-400 hover:text-[#1A1A1A]"
             }`}
           >
-            Looks {outfits.length > 0 && `(${outfits.length})`}
+            Looks {outfits.length > 0 && <span className="ml-1 opacity-60">({outfits.length})</span>}
           </button>
         </div>
  
-        {/* [NEW] Occasion selector + Generate button grouped together */}
-        <div className="flex flex-wrap items-center gap-3 justify-center md:justify-end">
+        {/* Occasion selector + Generate button grouped together */}
+        <div className="flex flex-wrap items-center gap-4 justify-center md:justify-end">
           <button
-  onClick={handleLogout}
-  className="px-4 py-2 text-xs bg-red-500 hover:bg-red-600 text-white rounded-full transition"
->
-  Logout
-</button>
-          <select
-            value={occasion}
-            onChange={(e) => setOccasion(e.target.value as Occasion)}
-            className="text-xs font-medium text-stone-600 bg-white border border-stone-200 rounded-full px-4 py-2 outline-none cursor-pointer hover:border-stone-400 transition-all"
+            onClick={handleLogout}
+            className="text-xs uppercase tracking-widest font-medium text-stone-400 hover:text-[#1A1A1A] transition-colors mr-2"
           >
-            <option value="casual">👟 Casual</option>
-            <option value="party">🎉 Party</option>
-            <option value="office">💼 Office</option>
-          </select>
+            Log out
+          </button>
+          <div className="relative">
+            <select
+              value={occasion}
+              onChange={(e) => setOccasion(e.target.value as Occasion)}
+              className="appearance-none text-xs uppercase tracking-widest font-semibold text-[#1A1A1A] bg-transparent border border-stone-300 rounded-none pl-4 pr-8 py-2.5 outline-none cursor-pointer hover:border-[#1A1A1A] transition-colors"
+            >
+              <option value="casual">Casual</option>
+              <option value="party">Evening</option>
+              <option value="office">Office</option>
+            </select>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-50 text-[10px]">
+              ▼
+            </div>
+          </div>
  
           <button
             onClick={generateOutfits}
             disabled={items.length < 2}
-            className="flex items-center gap-2 px-5 py-2 bg-amber-800 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold tracking-wider uppercase rounded-full transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-200"
+            className="flex items-center gap-2 px-6 py-2.5 bg-[#4C5850] hover:bg-[#3A453E] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs uppercase tracking-widest font-semibold transition-colors duration-300"
           >
-            <span>✦</span> Generate Looks
+            <span className="text-sm">✦</span> Generate Looks
           </button>
         </div>
       </header>
  
-      <main className="max-w-7xl mx-auto px-6 md:px-12 py-10 space-y-14">
+      <main className="max-w-7xl mx-auto px-6 md:px-12 py-16 space-y-16">
  
         {/* ════════════════════════════════
             TAB: WARDROBE
         ════════════════════════════════ */}
         {activeTab === "wardrobe" && (
-          <>
+          <div className="animate-in fade-in duration-700">
             {/* Upload section */}
-            <div className="grid md:grid-cols-2 gap-8 items-center bg-white rounded-2xl border border-stone-200 p-8">
+            <div className="grid lg:grid-cols-5 gap-12 items-center mb-20">
  
+              {/* Upload CTA Text */}
+              <div className="lg:col-span-2 flex flex-col gap-6">
+                <div>
+                  <h2 className="font-heading text-4xl font-bold text-[#1A1A1A] leading-tight mb-4">
+                    Curate your <br /> <span className="italic font-light text-stone-500">collection.</span>
+                  </h2>
+                  <p className="text-sm text-stone-500 leading-relaxed max-w-sm font-light">
+                    Upload a piece and let our AI instantly detect its category and extract its precise color profile.
+                  </p>
+                </div>
+ 
+                <button
+                  onClick={handleUpload}
+                  disabled={!file || loading}
+                  className="self-start flex items-center justify-center gap-3 px-8 py-3.5 bg-[#4C5850] hover:bg-[#3A453E] disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs uppercase tracking-widest font-semibold transition-colors duration-300"
+                >
+                  {loading ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
+                      Analyzing...
+                    </>
+                  ) : "Add to Archive"}
+                </button>
+ 
+                {uploadError && (
+                  <div className="flex items-start gap-2 bg-stone-50 border border-stone-200 text-stone-600 text-xs px-4 py-3 shadow-sm">
+                    <span>⚠</span>
+                    <span>{uploadError}</span>
+                  </div>
+                )}
+              </div>
+
               {/* Drop zone */}
               <div
                 onClick={() => fileInputRef.current?.click()}
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
-                className={`cursor-pointer rounded-xl border-2 border-dashed min-h-50 flex flex-col items-center justify-center gap-3 transition-all duration-200
+                className={`lg:col-span-3 cursor-pointer rounded-xl border border-dashed h-[320px] flex flex-col items-center justify-center gap-4 transition-all duration-300 relative overflow-hidden group
                   ${dragOver
-                    ? "border-amber-400 bg-amber-50"
+                    ? "border-stone-400 bg-stone-50"
                     : preview
-                    ? "border-amber-300 bg-stone-50"
-                    : "border-stone-300 bg-stone-50 hover:border-stone-400 hover:bg-stone-100"
+                    ? "border-stone-200 bg-white"
+                    : "border-stone-200 bg-white hover:border-stone-300 hover:bg-stone-50"
                   }`}
               >
                 <input
@@ -510,174 +555,161 @@ await fetchItems(userData.user.id);
                   onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
                 />
                 {preview ? (
-                  <img src={preview} alt="preview" className="max-h-44 max-w-full object-contain rounded-lg px-4" />
+                  <div className="relative w-full h-full flex items-center justify-center p-6">
+                     <img src={preview} alt="preview" className="max-h-full max-w-full object-contain" />
+                     <div className="absolute inset-0 bg-white/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                       <span className="bg-[#1A1A1A] text-white text-xs uppercase tracking-widest font-semibold px-6 py-3">Change image</span>
+                     </div>
+                  </div>
                 ) : (
                   <>
-                    <div className="w-12 h-12 rounded-full bg-stone-200 flex items-center justify-center text-xl text-stone-400">+</div>
-                    <p className="text-sm text-stone-500 font-medium">Drop your item here</p>
-                    <p className="text-xs text-stone-400">or click to browse · JPG, PNG, WEBP</p>
+                    <div className="w-12 h-12 bg-stone-50 flex items-center justify-center text-stone-400 group-hover:text-[#1A1A1A] transition-colors duration-300">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    </div>
+                    <div className="text-center mt-2">
+                      <p className="text-xs uppercase tracking-widest font-semibold text-[#1A1A1A] mb-2">Drag & drop your item</p>
+                      <p className="text-xs text-stone-400 font-light">or click to browse</p>
+                    </div>
                   </>
                 )}
               </div>
  
-              {/* Upload CTA */}
-              <div className="flex flex-col gap-5">
-                <div>
-                  <h2 className="text-3xl font-light text-stone-800 leading-snug mb-2">
-                    Add to your <span className="italic text-amber-900">wardrobe</span>
-                  </h2>
-                  <p className="text-sm text-stone-500 leading-relaxed">
-                    Our AI detects the category — shirt, jeans, dress, or shoes — and color automatically. Just drop a photo and we handle the rest.
-                  </p>
-                </div>
- 
-                <button
-                  onClick={handleUpload}
-                  disabled={!file || loading}
-                  className="self-start flex items-center gap-2 px-7 py-3 bg-stone-900 hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-full transition-all duration-200 hover:-translate-y-0.5"
-                >
-                  {loading ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
-                      Analysing...
-                    </>
-                  ) : "Add to Wardrobe"}
-                </button>
- 
-                {uploadError && (
-                  <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-600 text-xs px-4 py-3 rounded-xl">
-                    <span>⚠</span>
-                    <span>{uploadError}</span>
-                  </div>
-                )}
-              </div>
             </div>
  
             {/* Wardrobe grid */}
             <div>
-              <div className="flex items-baseline gap-3 mb-6">
-                <h2 className="text-2xl font-light text-stone-800">My Wardrobe</h2>
-                {items.length > 0 && (
-                  <span className="text-xs text-stone-400 bg-stone-200 px-3 py-1 rounded-full">
-                    {items.length} items
-                  </span>
-                )}
+              <div className="flex items-baseline justify-between mb-8 pb-4 border-b border-stone-200">
+                <h3 className="font-heading text-2xl font-bold text-[#1A1A1A] uppercase tracking-tight">The Archive</h3>
+                <span className="text-xs uppercase tracking-widest font-semibold text-stone-400">
+                  {items.length} {items.length === 1 ? 'piece' : 'pieces'}
+                </span>
               </div>
  
               {items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 text-center">
-                  <span className="text-5xl mb-4 opacity-30">👗</span>
-                  <h3 className="text-xl font-light text-stone-600 mb-1">Your wardrobe is empty</h3>
-                  <p className="text-sm text-stone-400">Upload your first piece to get started</p>
+                <div className="flex flex-col items-center justify-center py-32 bg-white rounded-xl border border-stone-200 text-center">
+                  <div className="w-12 h-12 bg-stone-50 flex items-center justify-center text-stone-300 mb-6">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  </div>
+                  <h4 className="text-sm uppercase tracking-widest font-semibold text-[#1A1A1A] mb-3">No pieces yet</h4>
+                  <p className="text-sm text-stone-400 max-w-xs font-light">Upload your first clothing item to start building your digital archive.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {items.map((item) => (
                     <div
                       key={item.id}
-                      className="group relative bg-white rounded-2xl border border-stone-200 overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-stone-200"
+                      className="group relative bg-white rounded-xl border border-stone-200 overflow-hidden transition-all duration-500 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
                     >
                       {/* Delete button — visible on hover */}
                       <button
-                        onClick={() => handleDelete(item)}
-                        className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-stone-900/70 backdrop-blur-sm text-white text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all duration-200"
-                        title="Remove"
+                         onClick={() => handleDelete(item)}
+                         className="absolute top-4 right-4 z-10 w-8 h-8 bg-white border border-stone-200 text-stone-400 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-stone-100 hover:text-[#1A1A1A] transition-all duration-300"
+                         title="Remove"
                       >
-                        ✕
+                         ✕
                       </button>
  
-                      <div className={`h-48 flex items-center justify-center p-3 ${CATEGORY_BG[item.category] || "bg-stone-50"}`}>
-                        <img src={item.image_url} alt={item.category} className="max-h-full max-w-full object-contain" />
+                      <div className={`h-64 flex items-center justify-center p-8 bg-stone-50/50`}>
+                        <img src={item.image_url} alt={item.category} className="max-h-full max-w-full object-contain transition-transform duration-700 group-hover:scale-105" />
                       </div>
  
-                      <div className="px-3 py-2.5 border-t border-stone-100 flex items-center justify-between">
-                        <span className="text-[11px] font-semibold uppercase tracking-wider text-stone-700">
+                      <div className="px-5 py-4 border-t border-stone-200 flex flex-col gap-2">
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#1A1A1A]">
                           {CATEGORY_LABEL[item.category] || item.category}
                         </span>
-                        <span className="flex items-center gap-1.5 text-[11px] text-stone-400 capitalize">
-                          <span className={`w-2.5 h-2.5 rounded-full inline-block shrink-0 ${COLOR_DOT[item.color] || "bg-stone-300"}`} />
-                          {item.color}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`w-2 h-2 rounded-full border border-stone-200 ${COLOR_DOT[item.color as keyof typeof COLOR_DOT] || "bg-stone-300"}`} />
+                          <span className="text-[11px] font-medium text-stone-500 uppercase tracking-widest">
+                            {item.color}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-          </>
+          </div>
         )}
  
         {/* ════════════════════════════════
             TAB: LOOKS
         ════════════════════════════════ */}
         {activeTab === "looks" && (
-          <div>
-            <div className="flex items-baseline gap-3 mb-8">
-              <h2 className="text-2xl font-light text-stone-800">Generated Looks</h2>
+          <div className="animate-in fade-in duration-700">
+            <div className="flex items-baseline justify-between mb-10 pb-4 border-b border-stone-200">
+              <h2 className="font-heading text-2xl font-bold text-[#1A1A1A] uppercase tracking-tight">Curated Looks</h2>
               {outfits.length > 0 && (
-                <span className="text-xs text-stone-400 bg-stone-200 px-3 py-1 rounded-full">
-                  {outfits.length} outfits · {occasion}
+                <span className="text-xs font-semibold uppercase tracking-widest text-stone-500">
+                  {occasion} Edit
                 </span>
               )}
             </div>
  
             {outfits.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-24 text-center">
-                <span className="text-5xl mb-4 opacity-30">✦</span>
-                <h3 className="text-xl font-light text-stone-600 mb-1">No looks yet</h3>
-                <p className="text-sm text-stone-400 mb-6">Pick an occasion and hit "Generate Looks"</p>
+              <div className="flex flex-col items-center justify-center py-32 bg-white rounded-xl border border-stone-200 text-center">
+                <div className="w-12 h-12 bg-stone-50 text-[#1A1A1A] flex items-center justify-center mb-6">
+                  <span className="text-xl">✦</span>
+                </div>
+                <h3 className="text-sm uppercase tracking-widest font-semibold text-[#1A1A1A] mb-3">Awaiting Inspiration</h3>
+                <p className="text-sm text-stone-400 mb-8 max-w-sm font-light">Select an occasion and generate intelligent outfit combinations from your archive.</p>
                 <button
                   onClick={() => setActiveTab("wardrobe")}
-                  className="px-6 py-2.5 bg-stone-900 text-white text-sm rounded-full hover:bg-stone-700 transition"
+                  className="px-8 py-3.5 bg-transparent border border-stone-300 text-[#1A1A1A] text-xs uppercase tracking-widest font-semibold hover:border-[#1A1A1A] transition-colors"
                 >
-                  Go to Wardrobe
+                  Return to Archive
                 </button>
               </div>
             ) : (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {outfits.map((outfit, index) => (
                   <div
                     key={index}
-                    className="bg-white rounded-2xl border border-stone-200 overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-stone-100"
+                    className="bg-white rounded-xl border border-stone-200 overflow-hidden transition-all duration-500 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col"
                   >
-                    {/* Outfit images */}
-                    <div className="bg-stone-50 p-4 flex items-center justify-center gap-3 min-h-45 flex-wrap border-b border-stone-100">
-                      {outfit.top    && <img src={outfit.top.image_url}    className="h-32 object-contain flex-1 min-w-17.5" alt="top" />}
-                      {outfit.bottom && <img src={outfit.bottom.image_url} className="h-32 object-contain flex-1 min-w-17.5" alt="bottom" />}
-                      {outfit.dress  && <img src={outfit.dress.image_url}  className="h-32 object-contain flex-1 min-w-17.5" alt="dress" />}
-                      {outfit.shoe   && <img src={outfit.shoe.image_url}   className="h-32 object-contain flex-1 min-w-17.5" alt="shoes" />}
+                    {/* Outfit images - Minimal editorial grid */}
+                    <div className="bg-stone-50/50 p-8 flex items-center justify-center gap-6 flex-wrap flex-1 min-h-[280px]">
+                      {outfit.top    && <img src={outfit.top.image_url}    className="h-32 object-contain hover:scale-105 transition-transform duration-700" alt="top" />}
+                      {outfit.bottom && <img src={outfit.bottom.image_url} className="h-32 object-contain hover:scale-105 transition-transform duration-700" alt="bottom" />}
+                      {outfit.dress  && <img src={outfit.dress.image_url}  className="h-40 object-contain hover:scale-105 transition-transform duration-700" alt="dress" />}
+                      {outfit.shoe   && <img src={outfit.shoe.image_url}   className="h-24 object-contain hover:scale-105 transition-transform duration-700" alt="shoes" />}
                     </div>
  
                     {/* Footer */}
-                    <div className="px-4 py-3 flex items-center justify-between gap-2">
-                      <span className="text-sm italic text-stone-400 font-light truncate">
-                        {outfit.reason}
-                      </span>
+                    <div className="px-6 py-6 border-t border-stone-200 flex items-center justify-between gap-6 bg-white">
+                      <div className="flex-1">
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-stone-400 block mb-2">
+                          Styling Note
+                        </span>
+                        <span className="text-sm text-[#1A1A1A] font-light leading-relaxed block">
+                          {outfit.reason}
+                        </span>
+                      </div>
  
-                      {/* [NEW] Like / dislike — saves to saved_outfits */}
-                      <div className="flex gap-2 shrink-0">
-                        <button
-                          onClick={() => handleFeedback(index, true)}
-                          title="Love it"
-                          className={`w-8 h-8 rounded-full border text-sm flex items-center justify-center transition-all duration-200
-                            ${likedOutfits[index] === true
-                              ? "bg-stone-900 border-stone-900 text-white"
-                              : "border-stone-200 text-stone-400 hover:border-amber-400 hover:text-amber-900"
-                            }`}
-                        >
-                          {likedOutfits[index] === true ? "♥" : "♡"}
-                        </button>
-                        <button
-                          onClick={() => handleFeedback(index, false)}
-                          title="Not for me"
-                          className={`w-8 h-8 rounded-full border text-xs flex items-center justify-center transition-all duration-200
-                            ${likedOutfits[index] === false
-                              ? "bg-stone-900 border-stone-900 text-white"
-                              : "border-stone-200 text-stone-400 hover:border-stone-400"
-                            }`}
-                        >
-                          ✕
-                        </button>
+                      {/* Like / dislike */}
+                      <div className="flex flex-col gap-2 shrink-0">
+                         <button
+                           onClick={() => handleFeedback(index, true)}
+                           title="Love it"
+                           className={`w-10 h-10 border flex items-center justify-center transition-all duration-300
+                             ${likedOutfits[index] === true
+                               ? "bg-[#1A1A1A] border-[#1A1A1A] text-white"
+                               : "border-stone-200 text-stone-400 hover:border-[#1A1A1A] hover:text-[#1A1A1A] bg-transparent"
+                             }`}
+                         >
+                           <svg width="14" height="14" viewBox="0 0 24 24" fill={likedOutfits[index] === true ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                         </button>
+                         <button
+                           onClick={() => handleFeedback(index, false)}
+                           title="Not for me"
+                           className={`w-10 h-10 border flex items-center justify-center transition-all duration-300
+                             ${likedOutfits[index] === false
+                               ? "bg-[#1A1A1A] border-[#1A1A1A] text-white"
+                               : "border-stone-200 text-stone-400 hover:border-stone-400 hover:text-stone-600 bg-transparent"
+                             }`}
+                         >
+                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                         </button>
                       </div>
                     </div>
                   </div>
@@ -688,9 +720,9 @@ await fetchItems(userData.user.id);
         )}
  
       </main>
-
+ 
       <Chatbot wardrobeItems={items} />
-
+ 
     </div>
   );
 }
