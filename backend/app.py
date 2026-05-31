@@ -27,13 +27,13 @@ _model = None
 def get_model():
     global _model
     if _model is None:
-        print("⏳ Loading model...")
+        print("Loading model...")
         _model = build_model()
         model_path = os.path.join(os.path.dirname(__file__), "model.pth")
         _model.load_state_dict(torch.load(model_path, map_location=device))
         _model = _model.to(device)
         _model.eval()
-        print("✅ Model loaded successfully")
+        print("Model loaded successfully")
     return _model
 
 # ---------------- TRANSFORM ----------------
@@ -101,7 +101,7 @@ def analyze():
     if request.method == "OPTIONS":
         return '', 200
 
-    print("📥 Incoming request")
+    print("Incoming request")
 
     if "image" not in request.files:
         return jsonify({"error": "No image provided"}), 400
@@ -131,7 +131,7 @@ def analyze():
         })
 
     except Exception as e:
-        print("❌ Error:", e)
+        print("Error:", e)
         return jsonify({"error": str(e)}), 500
 
 # ---------------- HEALTH ----------------

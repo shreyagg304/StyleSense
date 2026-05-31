@@ -12,39 +12,66 @@ interface Message {
   content: string;
 }
 
-function buildSystemPrompt(wardrobeItems: WardrobeItem[]): string {
+function buildSystemPrompt(
+  wardrobeItems: WardrobeItem[],
+  weatherContext?: string,
+  occasionContext?: string,
+  styleProfile?: any
+): string {
   const wardrobeList =
     wardrobeItems.length > 0
       ? wardrobeItems
           .map(
             (item) =>
-              `- ${item.color} ${item.category}${
+              `- [ID: ${item.id}] ${item.color} ${item.category}${
                 item.style ? ` (${item.style})` : ""
               }`
           )
           .join("\n")
       : "No items uploaded yet.";
 
+  let contextAdditions = "";
+  if (weatherContext) {
+    contextAdditions += `\nCurrent Weather: ${weatherContext}`;
+  }
+  if (occasionContext) {
+    contextAdditions += `\nTarget Occasion: ${occasionContext}`;
+  }
+  if (styleProfile) {
+    contextAdditions += `\nUser Style Profile:
+- Aesthetic: ${styleProfile.aesthetic}
+- Preferred Palette: ${styleProfile.palette}
+- Fit Style: ${styleProfile.fit}
+- Priority: ${styleProfile.priority}
+- Occasion Frequency: ${styleProfile.formal_frequency}`;
+  }
+
   return `You are StyleSense, a friendly personal fashion stylist.
+${contextAdditions}
 
 User wardrobe:
 ${wardrobeList}
 
 Rules:
-- Only answer fashion-related questions
-- Suggest outfits using available wardrobe
-- Mention colors and categories clearly
-- Keep answers short and helpful
-`;
+- Only answer fashion-related questions.
+- Suggest outfits using available wardrobe.
+- Mention colors and categories clearly.
+- Keep answers short and helpful.
+- Consider the weather, occasion, and style profile in your suggestions if provided.
+- **CRITICAL**: If you suggest an outfit combination using items from the user's wardrobe, you MUST append a JSON block at the very end of your response in the format:
+\`\`\`json
+{
+  "suggested_outfit": ["item_id_1", "item_id_2", ...]
+}
+\`\`\`
+Do not mention the JSON block in your conversational text. Just append it. Make sure the JSON is valid and only includes item IDs that actually exist in the user's wardrobe list. If you are not recommending a specific outfit combination, do not append any JSON.`;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, wardrobeItems } = await req.json();
+    const { messages, wardrobeItems, location, occasion, styleProfile } = await req.json();
 
     const apiKey = process.env.OPENROUTER_API_KEY;
-
-    console.log("KEY EXISTS:", !!apiKey);
 
     if (!apiKey) {
       return NextResponse.json(
@@ -53,7 +80,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const systemPrompt = buildSystemPrompt(wardrobeItems || []);
+    let weatherContext = "";
+    if (location && process.env.OPENWEATHERMAP_API_KEY) {
+      try {
+        const weatherRes = await fetch(
+          `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
+            location
+          )}&units=metric&appid=${process.env.OPENWEATHERMAP_API_KEY}`
+        );
+        if (weatherRes.ok) {
+          const weatherData = await weatherRes.json();
+          const temp = Math.round(weatherData.main.temp);
+          const desc = weatherData.weather[0].description;
+          weatherContext = `${temp}°C, ${desc}`;
+        }
+      } catch (err) {
+        console.error("Failed to fetch weather", err);
+      }
+    }
+
+    const systemPrompt = buildSystemPrompt(wardrobeItems || [], weatherContext, occasion, styleProfile);
 
     const response = await fetch(
       "https://openrouter.ai/api/v1/chat/completions",
@@ -67,7 +113,7 @@ export async function POST(req: NextRequest) {
           "X-Title": "StyleSense",
         },
         body: JSON.stringify({
-          model: "meta-llama/llama-3-8b-instruct",
+          model: "anthropic/claude-3-haiku", // Use Claude 3 Haiku for chat styling suggestions
           messages: [
             { role: "system", content: systemPrompt },
             ...messages,
@@ -78,7 +124,6 @@ export async function POST(req: NextRequest) {
     );
 
     const data = await response.json();
-    console.log("OPENROUTER RESPONSE:", data);
 
     if (!response.ok) {
       return NextResponse.json({
