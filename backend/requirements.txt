@@ -6,4 +6,3 @@ pillow
 numpy
 opencv-python-headless
 gunicorn
-scikit-learn
